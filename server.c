@@ -13,64 +13,8 @@
 // #define HEADER_SIZE 3
   
 // Function designed for chat between client and server. 
-void func(int sockfd) 
-{ 
-        // u_char header_info[HEADER_SIZE];
 
-        // read(sockfd, header_info, sizeof(header_info));
-
-        // u_char n = header_info[0];
-        // u_char width = header_info[1];
-        // u_char height = header_info[2];
-
-        int n = 0;
-        read(sockfd, &n, sizeof(n));
-        int width = 0;
-        read(sockfd, &width, sizeof(width));
-        int height = 0;
-        read(sockfd, &height, sizeof(height));
-        n = ntohl(n);
-        width = ntohl(width);
-        height = ntohl(height);
-        
-
-        printf("Received header:\n Number of matrices = %d\n Width of each = %d\n Height of each = %d\n", n, width, height);
-
-        int buff_size = width * height;
-        u_char buff[buff_size]; 
-        u_char out[buff_size];
-
-        clock_t begin = clock();
-        
-        for(size_t i = 0; i < n; i++) {
-            read(sockfd, buff, sizeof(buff));
-
-            for(size_t j = 0; j < height; j++) {
-                for(size_t k = 0; k < width; k++) {
-                    int index = j * width + k + j;
-                    if (index < (j + 1) * width) {
-                        out[j*width +k] = buff[index];
-                        printf("\t%x", buff[index]);
-                    } else {
-                        out[j*width +k] = buff[index - width];
-                        printf("\t%x", buff[index - width]);
-                    }
-                    // printf("\t%x", buff[ j * width + k]);
-                }
-                printf("\n");
-            }
-            write(sockfd, out, sizeof(out));
-            printf("\n");
-        }
-
-        clock_t end = clock();
-        long int time_spent = (long int)(end - begin);
-        printf("Elapsed: %ld ms\n", time_spent);
-} 
-  
-// Driver function 
-int main() 
-{ 
+int create() {
     int sockfd, connfd, len; 
     struct sockaddr_in servaddr, cli; 
   
@@ -118,10 +62,82 @@ int main()
     } 
     else
         printf("server acccept the client...\n"); 
+    
+    return connfd;
+}
+
+void func(int sockfd) 
+{ 
+        // u_char header_info[HEADER_SIZE];
+
+        // read(sockfd, header_info, sizeof(header_info));
+
+        // u_char n = header_info[0];
+        // u_char width = header_info[1];
+        // u_char height = header_info[2];
+
+        int n = 0;
+        read(sockfd, &n, sizeof(n));
+        int width = 0;
+        read(sockfd, &width, sizeof(width));
+        int height = 0;
+        read(sockfd, &height, sizeof(height));
+        n = ntohl(n);
+        width = ntohl(width);
+        height = ntohl(height);
+        
+
+        printf("Received header:\n Number of matrices = %d\n Width of each = %d\n Height of each = %d\n", n, width, height);
+
+        int buff_size = n * width * height;
+        u_char buff[buff_size]; 
+        u_char out[buff_size];
+
+        clock_t begin = clock();
+        
+        read(sockfd, buff, sizeof(buff));
+
+        for(size_t i = 0; i < n; i++) {     
+            for(size_t j = 0; j < height; j++) {
+                for(size_t k = 0; k < width; k++) {
+                    int index = j * width + k;
+                    printf("\t%x", buff[i*width*height + index]);
+                }
+                 printf("\n");
+            }
+             printf("\n");
+        }
+
+        for(size_t i = 0; i < n; i++) {     
+            for(size_t j = 0; j < height; j++) {
+                for(size_t k = 0; k < width; k++) {
+                    int index = j * width + k + j;
+                    if (index < (j + 1) * width) {
+                        out[i*width*height + j*width + k] = buff[i*width*height + index];
+                        printf("\t%x", buff[i*width*height + index]);
+                    } else {
+                        out[i*width*height + j*width +k] = buff[i*width*height + index - width];
+                        printf("\t%x", buff[i*width*height + index - width]);
+                    }
+                    // printf("\t%x", buff[ j * width + k]);
+                }
+                printf("\n");
+            }
+            printf("\n");
+        }
+
+        write(sockfd, out, sizeof(out));
+
+        clock_t end = clock();
+        long int time_spent = (long int)(end - begin);
+        printf("Elapsed: %ld ms\n", time_spent);
+} 
   
-    // Function for chatting between client and server 
-    func(connfd); 
-  
-    // After chatting close the socket 
+// Driver function 
+int main() 
+{ 
+    int sockfd;
+    sockfd = create();
+    func(sockfd); 
     close(sockfd); 
 } 
