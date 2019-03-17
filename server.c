@@ -10,10 +10,6 @@
 #define PORT 8080 
 #define SA struct sockaddr 
 
-// #define HEADER_SIZE 3
-  
-// Function designed for chat between client and server. 
-
 int create() {
     int sockfd, connfd, len; 
     struct sockaddr_in servaddr, cli; 
@@ -68,14 +64,6 @@ int create() {
 
 void func(int sockfd) 
 { 
-        // u_char header_info[HEADER_SIZE];
-
-        // read(sockfd, header_info, sizeof(header_info));
-
-        // u_char n = header_info[0];
-        // u_char width = header_info[1];
-        // u_char height = header_info[2];
-
         int n = 0;
         read(sockfd, &n, sizeof(n));
         int width = 0;
@@ -89,40 +77,50 @@ void func(int sockfd)
 
         printf("Received header:\n Number of matrices = %d\n Width of each = %d\n Height of each = %d\n", n, width, height);
 
-        int buff_size = n * width * height;
-        u_char buff[buff_size]; 
-        u_char out[buff_size];
+        u_char *in = malloc(sizeof(u_char) * n * width * height);
+        u_char *out = malloc(sizeof(u_char) * n * width * height);
+
+        u_char buff[height * width];
+
+        for (size_t i = 0; i < n; i++) {
+            read(sockfd, in + i * height * width, sizeof(buff));
+        }
 
         clock_t begin = clock();
         
-        read(sockfd, buff, sizeof(buff));
-        
-        process(n, height, width, buff, out);
+        process(n, height, width, in, out);
 
-        write(sockfd, out, sizeof(out));
+        for (size_t i = 0; i < n; i++) {
+            write(sockfd, out + i * height * width, sizeof(buff));
+        }
+        
 
         clock_t end = clock();
         long int time_spent = (long int)(end - begin);
         printf("Elapsed: %ld ms\n", time_spent);
+        free(in);
+        free(out);
 } 
 
-void process(int n, int height, int width, u_char *buff, u_char *out) {
+void process(int n, int height, int width, u_char *in, u_char *out) {
+    printf("Start calculations\n");
     for(size_t i = 0; i < n; i++) {     
         for(size_t j = 0; j < height; j++) {
             for(size_t k = 0; k < width; k++) {
                 int index = j * width + k + j;
                 if (index < (j + 1) * width) {
-                    out[i*width*height + j*width + k] = buff[i*width*height + index];
-                    printf("\t%x", buff[i*width*height + index]);
+                    out[i*width*height + j*width + k] = in[i*width*height + index];
+                    //printf("\t%x", in[i*width*height + index]);
                 } else {
-                    out[i*width*height + j*width +k] = buff[i*width*height + index - width];
-                    printf("\t%x", buff[i*width*height + index - width]);
+                    out[i*width*height + j*width +k] = in[i*width*height + index - width];
+                    //printf("\t%x", in[i*width*height + index - width]);
                 }
             }
-            printf("\n");
+            //printf("\n");
         }
-        printf("\n");
+        //printf("\n");
     }
+    printf("Calculations complete\n");
 }
   
 // Driver function 
