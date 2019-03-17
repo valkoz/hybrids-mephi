@@ -71,20 +71,17 @@ void send_data(int sockfd, int count, int width, int height)
     int sz = width * height;
     u_char buff[size]; 
     bzero(buff, sizeof(buff)); 
-    for(size_t i = 0; i < count; i++)
+    for(size_t i = 0; i < size; i++)
     {
-        for(size_t j = 0; j < sz; j++)
-        {
-            if (j % width == 0) {
+            if (i % width == 0) {
                 printf("\n");
             }
-            if (j % sz == 0) {
+            if (i % sz == 0) {
                 printf("\n");
             }
 
-            buff[i*sz + j] = randomByte();     
-            printf("\t%x", buff[i*sz + j]);       
-        }
+            buff[i] = randomByte();     
+            printf("\t%x", buff[i]);       
     }
 
     write(sockfd, buff, sizeof(buff));

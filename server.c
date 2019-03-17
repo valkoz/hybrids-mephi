@@ -96,35 +96,8 @@ void func(int sockfd)
         clock_t begin = clock();
         
         read(sockfd, buff, sizeof(buff));
-
-        for(size_t i = 0; i < n; i++) {     
-            for(size_t j = 0; j < height; j++) {
-                for(size_t k = 0; k < width; k++) {
-                    int index = j * width + k;
-                    printf("\t%x", buff[i*width*height + index]);
-                }
-                 printf("\n");
-            }
-             printf("\n");
-        }
-
-        for(size_t i = 0; i < n; i++) {     
-            for(size_t j = 0; j < height; j++) {
-                for(size_t k = 0; k < width; k++) {
-                    int index = j * width + k + j;
-                    if (index < (j + 1) * width) {
-                        out[i*width*height + j*width + k] = buff[i*width*height + index];
-                        printf("\t%x", buff[i*width*height + index]);
-                    } else {
-                        out[i*width*height + j*width +k] = buff[i*width*height + index - width];
-                        printf("\t%x", buff[i*width*height + index - width]);
-                    }
-                    // printf("\t%x", buff[ j * width + k]);
-                }
-                printf("\n");
-            }
-            printf("\n");
-        }
+        
+        process(n, height, width, buff, out);
 
         write(sockfd, out, sizeof(out));
 
@@ -132,6 +105,25 @@ void func(int sockfd)
         long int time_spent = (long int)(end - begin);
         printf("Elapsed: %ld ms\n", time_spent);
 } 
+
+void process(int n, int height, int width, u_char *buff, u_char *out) {
+    for(size_t i = 0; i < n; i++) {     
+        for(size_t j = 0; j < height; j++) {
+            for(size_t k = 0; k < width; k++) {
+                int index = j * width + k + j;
+                if (index < (j + 1) * width) {
+                    out[i*width*height + j*width + k] = buff[i*width*height + index];
+                    printf("\t%x", buff[i*width*height + index]);
+                } else {
+                    out[i*width*height + j*width +k] = buff[i*width*height + index - width];
+                    printf("\t%x", buff[i*width*height + index - width]);
+                }
+            }
+            printf("\n");
+        }
+        printf("\n");
+    }
+}
   
 // Driver function 
 int main() 
