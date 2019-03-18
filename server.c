@@ -98,14 +98,16 @@ void func(int sockfd)
 
 void process(int n, int height, int width, u_char *in, u_char *out) {
     printf("Start calculations\n");
-    for(size_t i = 0; i < n; i++) {     
-        for(size_t j = 0; j < height; j++) {
-            for(size_t k = 0; k < width; k++) {
-                int index = j * width + k + j;
-                if (index < (j + 1) * width) {
-                    out[i*width*height + j*width + k] = in[i*width*height + index];
+    int i, j, k;
+
+    for(i = 0; i < n; i++) {     
+        for(j = 0; j < height; j++) {
+            for(k = 0; k < width; k++) {
+                int current = i * width * height + j * width + k;
+                if (k + j < width) {
+                    out[current] = in[current + j];
                 } else {
-                    out[i*width*height + j*width +k] = in[i*width*height + index - width];
+                    out[current] = in[current + j - width];
                 }
             }
         }
