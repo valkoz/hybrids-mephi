@@ -1,10 +1,12 @@
-// ./client 127.0.0.1 8080 64 1024
+// ./client 127.0.0.1 8080 64 1024 s
 
 #include <netdb.h> 
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
 #include <sys/socket.h> 
+#include <stdbool.h>
+#include <time.h> 
 #define SA struct sockaddr 
 
 // #define MATRIX_COUNT 8192
@@ -53,8 +55,10 @@ int create(char* addr, char* port) {
     return sockfd;
 }
 
-void send_data(int sockfd, int count, int width, int height) 
+void send_data(int sockfd, int count, int width, int height, int silent) 
 { 
+    printf("Sending data...");
+
     int n = htonl(count);
     write(sockfd, &n, sizeof(n));
     int w = htonl(width);
@@ -69,40 +73,51 @@ void send_data(int sockfd, int count, int width, int height)
         bzero(buff, sizeof(buff)); 
         for(size_t j = 0; j < sz; j++)
         {
-            /*if (j % width == 0) {
-                printf("\n");
-            }
-            if (j % sz == 0) {
-                printf("\n");
-            }*/
-
-            buff[j] = randomByte();     
-            //printf("\t%x", buff[j]);       
+	    buff[j] = randomByte();    
+	    
+	    if (!silent) {
+	    	if (j % width == 0) {
+                    printf("\n");
+                }
+                if (j % sz == 0) {
+                    printf("\n");
+                }
+		printf("\t%x", buff[j]);
+	    }
         }
         write(sockfd, buff, sizeof(buff)); 
     }
+    printf("\nData have been send.");
 }
 
-void receive_data(int sockfd, int count, int width, int height) {
+void receive_data(int sockfd, int count, int width, int height, int silent) {
 
     int size = width * height;
 
     u_char buff[size];
     bzero(buff, sizeof(buff));
  
-    printf("\nResult:\n");
+    printf("\nReceiving result...");
+
+    u_char *in = malloc(sizeof(u_char) * count * width * height);
 
     for(size_t i = 0; i < count; i++)
     {
-        // printf("\n");
-        read(sockfd, buff, sizeof(buff)); 
-        for(size_t j = 0; j < height; j++) {
-            for(size_t k = 0; k < width; k++) {
-                // printf("\t%x", buff[j*width +k]);
+        read(sockfd, in + i * size, sizeof(buff)); 
+        if (!silent) {
+            for(size_t j = 0; j < size; j++) {
+	    	if (j % width == 0) {
+                    printf("\n");
+                }
+                if (j % size == 0) {
+                    printf("\n");
+                }
+		printf("\t%x", in[i * size + j]);
             }
-            // printf("\n");
-        }
+	}
     }
+    printf("\nResult received.");
+    free(in);
 } 
   
 int main(int argc, char **argv) 
@@ -113,8 +128,18 @@ int main(int argc, char **argv)
     int count = atoi(argv[3]);
     int height = atoi(argv[4]);
     int width = atoi(argv[4]);
+    bool silent = false;
+    if (argv[5])
+	silent = true;
+
     sockfd = create(host, port);
-    send_data(sockfd, count, width, height); 
-    receive_data(sockfd, count, width, height);
-    close(sockfd); 
+
+    clock_t begin = clock();
+    send_data(sockfd, count, width, height, silent); 
+    receive_data(sockfd, count, width, height, silent);
+    clock_t end = clock();
+    printf("\nElapsed: %ld ms", (long int)(end - begin));
+    
+    close(sockfd);
+    printf("\nSocket successfully closed.\n"); 
 } 

@@ -6,7 +6,6 @@
 #include <sys/socket.h> 
 #include <sys/types.h>
 #include <time.h> 
-#define MAX 80 
 #define PORT 8080 
 #define SA struct sockaddr 
 
@@ -87,17 +86,16 @@ void func(int sockfd)
         }
 
         clock_t begin = clock();
-        
         process(n, height, width, in, out);
+        clock_t end = clock();
+        printf("Calculation time: %ld ms\n", (long int)(end - begin));
 
+        printf("Sending result...\n");
         for (size_t i = 0; i < n; i++) {
             write(sockfd, out + i * height * width, sizeof(buff));
         }
-        
 
-        clock_t end = clock();
-        long int time_spent = (long int)(end - begin);
-        printf("Elapsed: %ld ms\n", time_spent);
+	printf("Result send.\n");
         free(in);
         free(out);
 } 
@@ -110,15 +108,11 @@ void process(int n, int height, int width, u_char *in, u_char *out) {
                 int index = j * width + k + j;
                 if (index < (j + 1) * width) {
                     out[i*width*height + j*width + k] = in[i*width*height + index];
-                    //printf("\t%x", in[i*width*height + index]);
                 } else {
                     out[i*width*height + j*width +k] = in[i*width*height + index - width];
-                    //printf("\t%x", in[i*width*height + index - width]);
                 }
             }
-            //printf("\n");
         }
-        //printf("\n");
     }
     printf("Calculations complete\n");
 }
