@@ -7,6 +7,8 @@
 #include <sys/socket.h> 
 #include <stdbool.h>
 #include <time.h> 
+#include <errno.h>
+#include <string.h>
 #define SA struct sockaddr 
 
 // #define MATRIX_COUNT 8192
@@ -119,6 +121,18 @@ void receive_data(int sockfd, int count, int width, int height, int silent) {
     printf("\nResult received.");
     free(in);
 } 
+
+void save_report(long int size_bytes, long int time_ms) {
+    FILE *file;
+    file = fopen("results.txt", "ab");
+    if (!file) {
+        printf("something went wrong: %s", strerror(errno));
+	exit(1);
+    }
+    fprintf(file, "%ld:%ld\n", (long int) size_bytes, (long int) time_ms);
+    fclose(file);
+    printf("Report saved.\n"); 
+}
   
 int main(int argc, char **argv) 
 { 
@@ -139,7 +153,8 @@ int main(int argc, char **argv)
     receive_data(sockfd, count, width, height, silent);
     clock_t end = clock();
     printf("\nElapsed: %ld ms", (long int)(end - begin));
-    
+
     close(sockfd);
     printf("\nSocket successfully closed.\n"); 
+    save_report(count * height * width, end - begin);
 } 

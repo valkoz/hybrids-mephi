@@ -5,7 +5,6 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #include <sys/types.h>
-#include <time.h> 
 #define PORT 8080 
 #define SA struct sockaddr 
 
@@ -85,10 +84,7 @@ void func(int sockfd)
             read(sockfd, in + i * height * width, sizeof(buff));
         }
 
-        clock_t begin = clock();
         process(n, height, width, in, out);
-        clock_t end = clock();
-        printf("Calculation time: %ld ms\n", (long int)(end - begin));
 
         printf("Sending result...\n");
         for (size_t i = 0; i < n; i++) {
