@@ -123,10 +123,6 @@ void process(int n, int height, int width, u_char *in, u_char *out) {
                 } else {
                     out[current] = in[current + j - width];
                 }
-		//int fact = 1;
-		//for (int c = 1; c <= in[current % 20]; c++) {
-    		//    fact = fact * c;
-		//}
             }
         }
     }

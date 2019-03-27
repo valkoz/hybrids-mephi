@@ -11,10 +11,6 @@
 #include <string.h>
 #define SA struct sockaddr 
 
-// #define MATRIX_COUNT 8192
-// #define MATRIX_SIZE_WIDTH 1024
-// #define MATRIX_SIZE_HEIGHT 1024
-
 u_char randomByte()
 {
   return (u_char) randInRange( 0, 255 );

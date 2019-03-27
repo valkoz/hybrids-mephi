@@ -62,7 +62,7 @@ int create() {
     return connfd;
 }
 
-void func(int sockfd) 
+void func(int sockfd, int n_threads) 
 { 
         int n = 0;
         read(sockfd, &n, sizeof(n));
@@ -89,7 +89,7 @@ void func(int sockfd)
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
 
-        process(n, height, width, in, out);
+        process(n, height, width, in, out, n_threads);
 
 	gettimeofday(&end, NULL);
 
@@ -111,10 +111,10 @@ void func(int sockfd)
         free(out);
 } 
 
-void process(int n, int height, int width, u_char *in, u_char *out) {
+void process(int n, int height, int width, u_char *in, u_char *out, int n_threads) {
     printf("Start calculations\n");
     omp_set_dynamic(0);
-    omp_set_num_threads(16);
+    omp_set_num_threads(n_threads);
 
 int i, j, k;
 #pragma omp parallel shared(in, out) private(i,j,k)
@@ -130,10 +130,6 @@ int i, j, k;
                 } else {
                     out[current] = in[current + j - width];
                 }
-		//int fact = 1;
-		//for (int c = 1; c <= in[current % 20]; c++) {
-    		//    fact = fact * c;
-		//}
             }
         }
     }
@@ -142,10 +138,11 @@ int i, j, k;
 }
   
 // Driver function 
-int main() 
+int main(int argc, char **argv) 
 { 
     int sockfd;
+    int n_threads = atoi(argv[1]);
     sockfd = create();
-    func(sockfd); 
+    func(sockfd, n_threads); 
     close(sockfd); 
 } 
