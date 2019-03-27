@@ -5,6 +5,7 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #include <sys/types.h>
+#include <omp.h>
 #include <time.h> 
 #define PORT 8080 
 #define SA struct sockaddr 
@@ -61,7 +62,7 @@ int create() {
     return connfd;
 }
 
-void func(int sockfd) 
+void func(int sockfd, int n_threads) 
 { 
         int n = 0;
         read(sockfd, &n, sizeof(n));
@@ -88,7 +89,7 @@ void func(int sockfd)
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
 
-        process(n, height, width, in, out);
+        process(n, height, width, in, out, n_threads);
 
 	gettimeofday(&end, NULL);
 
@@ -110,9 +111,15 @@ void func(int sockfd)
         free(out);
 } 
 
-void process(int n, int height, int width, u_char *in, u_char *out) {
+void process(int n, int height, int width, u_char *in, u_char *out, int n_threads) {
     printf("Start calculations\n");
-    int i, j, k;
+    omp_set_dynamic(0);
+    omp_set_num_threads(n_threads);
+
+int i, j, k;
+#pragma omp parallel shared(in, out) private(i,j,k)
+{
+   #pragma omp for // collapse(2)
     for(i = 0; i < n; i++) {     
         for(j = 0; j < height; j++) {
             // printf("i = %d, j= %d, threadId = %d \n", i, j, omp_get_thread_num());
@@ -126,14 +133,16 @@ void process(int n, int height, int width, u_char *in, u_char *out) {
             }
         }
     }
+}
     printf("Calculations complete\n");
 }
   
 // Driver function 
-int main() 
+int main(int argc, char **argv) 
 { 
     int sockfd;
+    int n_threads = atoi(argv[1]);
     sockfd = create();
-    func(sockfd); 
+    func(sockfd, n_threads); 
     close(sockfd); 
 } 
