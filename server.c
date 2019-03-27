@@ -5,7 +5,6 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #include <sys/types.h>
-#include <omp.h>
 #include <time.h> 
 #define PORT 8080 
 #define SA struct sockaddr 
@@ -113,13 +112,7 @@ void func(int sockfd)
 
 void process(int n, int height, int width, u_char *in, u_char *out) {
     printf("Start calculations\n");
-  //  omp_set_dynamic(0);
-  //  omp_set_num_threads(16);
-
-int i, j, k;
-//#pragma omp parallel shared(in, out) private(i,j,k)
-//{
-//   #pragma omp for // collapse(2)
+    int i, j, k;
     for(i = 0; i < n; i++) {     
         for(j = 0; j < height; j++) {
             // printf("i = %d, j= %d, threadId = %d \n", i, j, omp_get_thread_num());
@@ -137,7 +130,6 @@ int i, j, k;
             }
         }
     }
-//}
     printf("Calculations complete\n");
 }
   
