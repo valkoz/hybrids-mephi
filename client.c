@@ -1,4 +1,4 @@
-// ./client 127.0.0.1 8080 64 1024 s
+// ./client 127.0.0.1 8080 1024 1024 omp.txt s
 
 #include <netdb.h> 
 #include <stdio.h> 
@@ -92,7 +92,7 @@ void send_data(int sockfd, int count, int width, int height, int silent)
     printf("\nData have been send.");
 }
 
-void receive_data(int sockfd, int count, int width, int height, int silent) {
+double receive_data(int sockfd, int count, int width, int height, int silent) {
 
     int size = width * height;
 
@@ -118,18 +118,24 @@ void receive_data(int sockfd, int count, int width, int height, int silent) {
             }
 	}
     }
+
+    double time = 0;
+    read(sockfd, &time, sizeof(time));
+
     printf("\nResult received.");
     free(in);
+    
+    return time;
 } 
 
-void save_report(long int size_bytes, long int time_ms) {
+void save_report(char* file_name, long int size_bytes, double time_ms) {
     FILE *file;
-    file = fopen("results.txt", "ab");
+    file = fopen(file_name, "ab");
     if (!file) {
         printf("something went wrong: %s", strerror(errno));
 	exit(1);
     }
-    fprintf(file, "%ld:%ld\n", (long int) size_bytes, (long int) time_ms);
+    fprintf(file, "%ld:%lf\n", (long int) size_bytes, (double) time_ms);
     fclose(file);
     printf("Report saved.\n"); 
 }
@@ -142,19 +148,20 @@ int main(int argc, char **argv)
     int count = atoi(argv[3]);
     int height = atoi(argv[4]);
     int width = atoi(argv[4]);
+    char* file_name = argv[5];
     bool silent = false;
-    if (argv[5])
+    if (argv[6])
 	silent = true;
 
     sockfd = create(host, port);
 
     clock_t begin = clock();
     send_data(sockfd, count, width, height, silent); 
-    receive_data(sockfd, count, width, height, silent);
+    double time = receive_data(sockfd, count, width, height, silent);
     clock_t end = clock();
     printf("\nElapsed: %ld ms", (long int)(end - begin));
 
     close(sockfd);
     printf("\nSocket successfully closed.\n"); 
-    save_report(count * height * width, end - begin);
+    save_report(file_name, count * height * width, time);
 } 

@@ -86,15 +86,25 @@ void func(int sockfd)
             read(sockfd, in + i * height * width, sizeof(buff));
         }
 
-	clock_t begin = clock();
+	struct timeval start, end;
+	gettimeofday(&start, NULL);
+
         process(n, height, width, in, out);
-	clock_t end = clock();
-        printf("\nElapsed: %ld ms", (long int)(end - begin));
+
+	gettimeofday(&end, NULL);
+
+	double delta = ((end.tv_sec  - start.tv_sec) * 1000000u + 
+         end.tv_usec - start.tv_usec) / 1.e6;
+	printf("\nElapsed: %lf ms\n", delta);
+
+	printf("Result send.\n");
 
         printf("Sending result...\n");
         for (size_t i = 0; i < n; i++) {
             write(sockfd, out + i * height * width, sizeof(buff));
         }
+
+	write(sockfd, &delta, sizeof(delta));
 
 	printf("Result send.\n");
         free(in);
@@ -103,13 +113,13 @@ void func(int sockfd)
 
 void process(int n, int height, int width, u_char *in, u_char *out) {
     printf("Start calculations\n");
-    omp_set_dynamic(0);
-    omp_set_num_threads(16);
+  //  omp_set_dynamic(0);
+  //  omp_set_num_threads(16);
 
 int i, j, k;
-#pragma omp parallel shared(in, out) private(i,j,k)
-{
-    #pragma omp for // collapse(2)
+//#pragma omp parallel shared(in, out) private(i,j,k)
+//{
+//   #pragma omp for // collapse(2)
     for(i = 0; i < n; i++) {     
         for(j = 0; j < height; j++) {
             // printf("i = %d, j= %d, threadId = %d \n", i, j, omp_get_thread_num());
@@ -120,10 +130,14 @@ int i, j, k;
                 } else {
                     out[current] = in[current + j - width];
                 }
+		//int fact = 1;
+		//for (int c = 1; c <= in[current % 20]; c++) {
+    		//    fact = fact * c;
+		//}
             }
         }
     }
-}
+//}
     printf("Calculations complete\n");
 }
   
