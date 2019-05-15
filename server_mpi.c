@@ -63,6 +63,7 @@ int create() {
 }
 
 void process(int n, int height, int width, u_char *in) {
+
     u_char *out = malloc(sizeof(u_char) * n * width * height);
     printf("Start calculations\n");
     int i, j, k;
@@ -79,7 +80,24 @@ void process(int n, int height, int width, u_char *in) {
             }
         }
     }
+
     in = out;
+
+//Тестовый вывод
+    for(size_t i = 0; i < n; i++)
+        {
+            for(size_t j = 0; j < height * width; j++) {
+	    	if (j % width == 0) {
+                    printf("\n");
+                }
+                if (j % height * width == 0) {
+                    printf("\n");
+                }
+		printf("\t%x", in[i * height * width + j]);
+            }
+        }
+
+
     printf("Calculations complete\n");
 }
   
@@ -146,7 +164,6 @@ int main(int argc, char **argv)
     //что то сделать с данными
     process(p, height, width, recvbuf);
 
-
     MPI_Gather(recvbuf, height * width * p, MPI_UNSIGNED_CHAR, out, height * width * p,
                MPI_UNSIGNED_CHAR, 0,
                MPI_COMM_WORLD);
@@ -161,6 +178,7 @@ int main(int argc, char **argv)
 
 if (rank == 0) {
         printf("Sending result...\n");
+
         for (size_t i = 0; i < n; i++) {
             write(sockfd, out + i * height * width, sizeof(buff));
         }
