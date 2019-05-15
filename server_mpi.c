@@ -62,16 +62,13 @@ int create() {
     return connfd;
 }
 
-void process(int n, int height, int width, u_char *in) {
-
-    u_char *out = malloc(sizeof(u_char) * n * width * height);
-    printf("Start calculations\n");
+void process(int n, int height, int width, u_char *in, u_char *out) {
+    printf("Start calculations\n width = %d height = %d", height, width);
     int i, j, k;
     for(i = 0; i < n; i++) {     
         for(j = 0; j < height; j++) {
             for(k = 0; k < width; k++) {
                 int current = i * width * height + j * width + k;
-                //printf("i = %d, j= %d, value = %x \n", i, j, out[current]);
                 if (k + j < width) {
                     out[current] = in[current + j];
                 } else {
@@ -81,7 +78,7 @@ void process(int n, int height, int width, u_char *in) {
         }
     }
 
-    in = out;
+    printf("Calculations complete\n");
 
 //Тестовый вывод
     for(size_t i = 0; i < n; i++)
@@ -93,12 +90,9 @@ void process(int n, int height, int width, u_char *in) {
                 if (j % height * width == 0) {
                     printf("\n");
                 }
-		printf("\t%x", in[i * height * width + j]);
+		printf("\t%x", out[i * height * width + j]);
             }
         }
-
-
-    printf("Calculations complete\n");
 }
   
 // Driver function 
@@ -162,7 +156,8 @@ int main(int argc, char **argv)
                 MPI_COMM_WORLD);
 
     //что то сделать с данными
-    process(p, height, width, recvbuf);
+//u_char *ob = (u_char *) malloc(height * width * sizeof(u_char) * p);
+    process(p, height, width, recvbuf, recvbuf);
 
     MPI_Gather(recvbuf, height * width * p, MPI_UNSIGNED_CHAR, out, height * width * p,
                MPI_UNSIGNED_CHAR, 0,
