@@ -62,7 +62,9 @@ int create() {
     return connfd;
 }
 
-void process(int n, int height, int width, u_char *in, u_char *out) {
+void process(int n, int height, int width, u_char *in/*, u_char *out*/) {
+
+u_char *out = (u_char *) malloc(height * width * sizeof(u_char) * n);
     printf("Start calculations\n width = %d height = %d", height, width);
     int i, j, k;
     for(i = 0; i < n; i++) {     
@@ -157,7 +159,7 @@ int main(int argc, char **argv)
 
     //что то сделать с данными
 //u_char *ob = (u_char *) malloc(height * width * sizeof(u_char) * p);
-    process(p, height, width, recvbuf, recvbuf);
+    process(p, height, width, recvbuf/*, recvbuf*/);
 
     MPI_Gather(recvbuf, height * width * p, MPI_UNSIGNED_CHAR, out, height * width * p,
                MPI_UNSIGNED_CHAR, 0,
