@@ -81,20 +81,6 @@ u_char *out = (u_char *) malloc(height * width * sizeof(u_char) * n);
     }
 
     printf("Calculations complete\n");
-
-//Тестовый вывод
-    for(size_t i = 0; i < n; i++)
-        {
-            for(size_t j = 0; j < height * width; j++) {
-	    	if (j % width == 0) {
-                    printf("\n");
-                }
-                if (j % height * width == 0) {
-                    printf("\n");
-                }
-		printf("\t%x", out[i * height * width + j]);
-            }
-        }
 }
   
 // Driver function 
@@ -118,30 +104,24 @@ int main(int argc, char **argv)
 
     sockfd = create();
     
-        //int n = 0;
-        read(sockfd, &n, sizeof(n));
-        //int width = 0;
-        read(sockfd, &width, sizeof(width));
-        //int height = 0;
-        read(sockfd, &height, sizeof(height));
-        n = ntohl(n);
-        width = ntohl(width);
-        height = ntohl(height);
+    read(sockfd, &n, sizeof(n));
+    read(sockfd, &width, sizeof(width));
+    read(sockfd, &height, sizeof(height));
+    n = ntohl(n);
+    width = ntohl(width);
+    height = ntohl(height);
         
 
-        printf("Received header:\n Number of matrices = %d\n Width of each = %d\n Height of each = %d\n", n, width, height);
+    printf("Received header:\n Number of matrices = %d\n Width of each = %d\n Height of each = %d\n", n, width, height);
 
-        in = malloc(sizeof(u_char) * n * width * height);
-        out = malloc(sizeof(u_char) * n * width * height);
+    in = malloc(sizeof(u_char) * n * width * height);
+    out = malloc(sizeof(u_char) * n * width * height);
 
         
 
-        for (size_t i = 0; i < n; i++) {
-            read(sockfd, in + i * height * width, sizeof(buff));
-        }
-
-	//struct timeval start, end;
-	//gettimeofday(&start, NULL);
+    for (size_t i = 0; i < n; i++) {
+        read(sockfd, in + i * height * width, sizeof(buff));
+    }
 }
 
     MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -158,19 +138,13 @@ int main(int argc, char **argv)
                 MPI_COMM_WORLD);
 
     //что то сделать с данными
-//u_char *ob = (u_char *) malloc(height * width * sizeof(u_char) * p);
-    process(p, height, width, recvbuf/*, recvbuf*/);
+    process(p, height, width, recvbuf);
 
     MPI_Gather(recvbuf, height * width * p, MPI_UNSIGNED_CHAR, out, height * width * p,
                MPI_UNSIGNED_CHAR, 0,
                MPI_COMM_WORLD);
 
     printf("\nGather complete!\n");
-	//gettimeofday(&end, NULL);
-
-	//double delta = ((end.tv_sec  - start.tv_sec) * 1000000u + 
-        // end.tv_usec - start.tv_usec) / 1.e6;
-	//printf("\nElapsed: %lf ms\n", delta);
 
 
 if (rank == 0) {
@@ -179,8 +153,6 @@ if (rank == 0) {
         for (size_t i = 0; i < n; i++) {
             write(sockfd, out + i * height * width, sizeof(buff));
         }
-
-	//write(sockfd, &delta, sizeof(delta));
 
 	printf("Result send.\n");
         free(in);
