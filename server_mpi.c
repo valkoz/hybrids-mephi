@@ -63,11 +63,6 @@ int create() {
 }
 
 void process(int n, int height, int width, u_char *in, u_char *out) {
-
-//u_char *out = (u_char *) malloc(height * width * sizeof(u_char) * n);
-    //printf("Start calculations count = %d, width = %d, height = %d\n", n, height, width);
-
-    printf("in[0] = %x", in[0]);
     int i, j, k;
     for(i = 0; i < n; i++) {     
         for(j = 0; j < height; j++) {
@@ -81,22 +76,6 @@ void process(int n, int height, int width, u_char *in, u_char *out) {
             }
         }
     }
-    //in = out;
-
-    //printf("Calculations complete\n");
-
-    for(size_t i = 0; i < n; i++)
-        {
-            for(size_t j = 0; j < height * width; j++) {
-	    	if (j % width == 0) {
-                    printf("\n");
-                }
-                if (j % height * width == 0) {
-                    printf("\n");
-                }
-		printf("\t%x", in[i * height * width + j]);
-            }
-        }
 }
   
 // Driver function 
@@ -107,6 +86,7 @@ int main(int argc, char **argv)
     int n, width, height;
     u_char *in = NULL;
     u_char *out = NULL;
+    struct timeval start, end;
     
     if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
         fprintf(stderr, "Error starting MPI program. Terminating.\n");
@@ -137,6 +117,9 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < n; i++) {
         read(sockfd, in + i * height * width, sizeof(u_char) * height * width);
     }
+
+    
+    gettimeofday(&start, NULL);
 }
 
     MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -163,11 +146,17 @@ int main(int argc, char **argv)
 
 
 if (rank == 0) {
+        gettimeofday(&end, NULL);
         printf("Sending result...\n");
+        double delta = ((end.tv_sec  - start.tv_sec) * 1000000u + 
+         end.tv_usec - start.tv_usec) / 1.e6;
+	printf("\nElapsed: %lf ms\n", delta);
 
         for (size_t i = 0; i < n; i++) {
             write(sockfd, out + i * height * width, sizeof(u_char) * height * width);
         }
+        
+        write(sockfd, &delta, sizeof(delta));
 
 	printf("Result send.\n");
         free(in);
