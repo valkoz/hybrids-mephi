@@ -62,10 +62,12 @@ int create() {
     return connfd;
 }
 
-void process(int n, int height, int width, u_char *in/*, u_char *out*/) {
+void process(int n, int height, int width, u_char *in, u_char *out) {
 
-u_char *out = (u_char *) malloc(height * width * sizeof(u_char) * n);
-    printf("Start calculations\n width = %d height = %d", height, width);
+//u_char *out = (u_char *) malloc(height * width * sizeof(u_char) * n);
+    //printf("Start calculations count = %d, width = %d, height = %d\n", n, height, width);
+
+    printf("in[0] = %x", in[0]);
     int i, j, k;
     for(i = 0; i < n; i++) {     
         for(j = 0; j < height; j++) {
@@ -79,8 +81,22 @@ u_char *out = (u_char *) malloc(height * width * sizeof(u_char) * n);
             }
         }
     }
+    //in = out;
 
-    printf("Calculations complete\n");
+    //printf("Calculations complete\n");
+
+    for(size_t i = 0; i < n; i++)
+        {
+            for(size_t j = 0; j < height * width; j++) {
+	    	if (j % width == 0) {
+                    printf("\n");
+                }
+                if (j % height * width == 0) {
+                    printf("\n");
+                }
+		printf("\t%x", in[i * height * width + j]);
+            }
+        }
 }
   
 // Driver function 
@@ -91,7 +107,6 @@ int main(int argc, char **argv)
     int n, width, height;
     u_char *in = NULL;
     u_char *out = NULL;
-    u_char buff[height * width];
     
     if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
         fprintf(stderr, "Error starting MPI program. Terminating.\n");
@@ -120,7 +135,7 @@ int main(int argc, char **argv)
         
 
     for (size_t i = 0; i < n; i++) {
-        read(sockfd, in + i * height * width, sizeof(buff));
+        read(sockfd, in + i * height * width, sizeof(u_char) * height * width);
     }
 }
 
@@ -130,17 +145,17 @@ int main(int argc, char **argv)
     int p = n / size;
     printf("process %d of %d всего матриц %ld  количество матриц на поток %ld\n", rank, size, n, p);
 
-   printf("%d \n", height * width * p);
 	//получить данные от рута
     u_char *recvbuf = (u_char *) malloc(height * width * sizeof(u_char) * p);
+    u_char *buffer = (u_char *) malloc(height * width * sizeof(u_char) * p);
     MPI_Scatter(in, height * width * p, MPI_UNSIGNED_CHAR, recvbuf, height * width * p,
                 MPI_UNSIGNED_CHAR, 0,
                 MPI_COMM_WORLD);
 
     //что то сделать с данными
-    process(p, height, width, recvbuf);
+    process(p, height, width, recvbuf, buffer);
 
-    MPI_Gather(recvbuf, height * width * p, MPI_UNSIGNED_CHAR, out, height * width * p,
+    MPI_Gather(buffer, height * width * p, MPI_UNSIGNED_CHAR, out, height * width * p,
                MPI_UNSIGNED_CHAR, 0,
                MPI_COMM_WORLD);
 
@@ -151,7 +166,7 @@ if (rank == 0) {
         printf("Sending result...\n");
 
         for (size_t i = 0; i < n; i++) {
-            write(sockfd, out + i * height * width, sizeof(buff));
+            write(sockfd, out + i * height * width, sizeof(u_char) * height * width);
         }
 
 	printf("Result send.\n");
