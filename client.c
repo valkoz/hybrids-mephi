@@ -11,9 +11,9 @@
 #include <string.h>
 #define SA struct sockaddr 
 
-u_char randomByte()
+unsigned char randomByte()
 {
-  return (u_char) randInRange( 0, 255 );
+  return (unsigned char) randInRange( 0, 255 );
 }
 
 int randInRange( int min, int max )
@@ -65,7 +65,7 @@ void send_data(int sockfd, int count, int width, int height, int silent)
     write(sockfd, &h, sizeof(h));
 
     int sz = width * height;
-    u_char buff[sz]; 
+    unsigned char buff[sz]; 
     for(size_t i = 0; i < count; i++)
     {
         bzero(buff, sizeof(buff)); 
@@ -92,12 +92,12 @@ double receive_data(int sockfd, int count, int width, int height, int silent) {
 
     int size = width * height;
 
-    u_char buff[size];
+    unsigned char buff[size];
     bzero(buff, sizeof(buff));
  
     printf("\nReceiving result...");
 
-    u_char *in = malloc(sizeof(u_char) * count * width * height);
+    unsigned char *in = malloc(sizeof(unsigned char) * count * width * height);
 
     for(size_t i = 0; i < count; i++)
     {
