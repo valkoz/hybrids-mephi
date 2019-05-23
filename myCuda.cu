@@ -65,18 +65,14 @@ int create() {
     return connfd;
 }
 
-__global__ void process(long grid_size, long treads, int n, int height, int width, unsigned char *in, unsigned char *out) {
-    int i, j, k;
-    for(i = 0; i < n; i++) {     
-        for(j = 0; j < height; j++) {
-            for(k = 0; k < width; k++) {
-                int current = i * width * height + j * width + k;
-                if (k + j < width) {
-                    out[current] = in[current + j];
-                } else {
-                    out[current] = in[current + j - width];
-                }
-            }
+__global__ void process(int n, int height, int width, unsigned char *in, unsigned char *out) {
+    int k;
+    for(k = 0; k < width; k++) {
+        int current = blockIdx.x * width * height + threadIdx.x * width + k;
+        if (k + threadIdx.x < width) {
+            out[current] = in[current + threadIdx.x];
+        } else {
+            out[current] = in[current + threadIdx.x - width];
         }
     }
 }
@@ -89,10 +85,7 @@ int main(int argc, char **argv)
     cudaEventCreate(&stop);
 
     int sockfd;
-    int n, width, height;
-    
-    long grid_size = 2;
-    long treads_size = 2;    
+    int n, width, height;  
 
     unsigned char *in = NULL;
     unsigned char *cuda_in = NULL;
@@ -117,20 +110,18 @@ int main(int argc, char **argv)
     for (size_t i = 0; i < n; i++) {
         read(sockfd, in + i * height * width, sizeof(unsigned char) * height * width);
     }
-    
-    //gettimeofday(&start, NULL);
 
     cudaMalloc(&cuda_in, sizeof(unsigned char) * n * width * height);
     cudaMalloc(&cuda_out, sizeof(unsigned char) * n * width * height);
-
     cudaMemcpy(cuda_in, in, sizeof(unsigned char) * n * width * height, cudaMemcpyHostToDevice);
+    
     cudaEventRecord(start);
-
-    process << < grid_size, treads_size >> > (grid_size, treads_size, n, height, width, cuda_in, cuda_out);
-
+    process << < n, height >> > (n, height, width, cuda_in, cuda_out);
     cudaEventRecord(stop);
+    
 
     cudaMemcpy(out, cuda_out, sizeof(unsigned char) * n * width * height, cudaMemcpyDeviceToHost);
+    
     cudaEventSynchronize(stop);
 
     cudaFree(cuda_in);
@@ -138,15 +129,10 @@ int main(int argc, char **argv)
 
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-    printf("\n\nTIME %f\n\n", milliseconds);
-
-        /*gettimeofday(&end, NULL);
-        printf("Sending result...\n");
-        double delta = ((end.tv_sec  - start.tv_sec) * 1000000u + 
-         end.tv_usec - start.tv_usec) / 1.e6;
-	printf("\nElapsed: %lf ms\n", delta);*/
+    printf("\n\nTIME %f\n\n", milliseconds);s
 
     for (size_t i = 0; i < n; i++) {
+        printf(".");
         write(sockfd, out + i * height * width, sizeof(unsigned char) * height * width);
     }
         
